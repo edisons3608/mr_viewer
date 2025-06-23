@@ -59,6 +59,9 @@ mrViewer(img,mask)
   * `imgVol`: 3D image array
   * `maskVol`: (optional) 3D binary mask array
 
+### Visual Sample
+
+![sample viewer output](assets/ref.png)
 
 ## License
 
