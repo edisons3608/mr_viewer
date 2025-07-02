@@ -67,13 +67,22 @@ classdef mrViewer < handle
       btnR.ButtonPushedFcn       = @(s,e) obj.rightClick(ax, lblSlice, sld);
       sld.ValueChangedFcn        = @(s,e) obj.onSliderChanged(e, ax, lblSlice, sld);
       sld.ValueChangingFcn       = @(s,e) obj.onSliderChanging(e, ax, lblSlice, sld);
+      fig.WindowKeyPressFcn = @(src, evt) obj.onKeyPress(evt, ax, lblSlice, sld);
 
       % Initialize and display first slice
       obj.updateMax(sld);
       obj.idx = 1;
       obj.showSlice(ax, lblSlice, sld);
     end
-
+    
+    function onKeyPress(obj, event, ax, lblSlice, sld)
+      switch event.Key
+        case 'leftarrow'
+          obj.leftClick(ax, lblSlice, sld);
+        case 'rightarrow'
+          obj.rightClick(ax, lblSlice, sld);
+      end
+    end
     function updateMax(obj, sld)
       % Determine max slices for the selected orientation and update slider
       dims = size(obj.imgVol);
