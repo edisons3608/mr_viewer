@@ -4,7 +4,11 @@ classdef mrViewer < handle
     orientation (1,:) char = 'Z'    % viewing plane ('X','Y','Z')
     imgVol                           % 3D image volume
     maskVol = []                     % Optional mask volume
-    maxIdx (1,1) double             % maximum slices in current orientation
+    maxIdx (1,1) double              % maximum slices in current orientation
+
+    % Toggle visibility for mask overlay (only used if maskVol is non-empty)
+    maskVisible (1,1) logical = true
+    hMaskCheckbox                    % handle for the mask toggle checkbox
   end
 
   methods
@@ -18,20 +22,20 @@ classdef mrViewer < handle
         obj.maskVol = double(maskMr.dataAy);
       end
 
-      % Create UI figure and grid with 3 columns so we can insert a slider
-      fig = uifigure('Name','mrViewer','Position', [100 100 600 800]);
+      % Create UI figure and grid with 3 columns so we can insert controls
+      fig = uifigure('Name','mrViewer','Position',[100 100 600 800]);
       gl = uigridlayout(fig, [4 3]);
       gl.RowHeight   = {30, '1x', 30, 30};
-      gl.ColumnWidth = {50, '1x', 50};
+      gl.ColumnWidth = {100, '1x',100};
 
       % Orientation label
-      lblOri = uilabel(gl, 'Text', 'Orientation:');
+      lblOri = uilabel(gl, 'Text','Orientation:');
       lblOri.Layout.Row    = 1;
       lblOri.Layout.Column = 1;
 
       % Orientation dropdown
       ddOri = uidropdown(gl, ...
-        'Items', {'X', 'Y', 'Z'}, ...
+        'Items', {'X','Y','Z'}, ...
         'Value', obj.orientation);
       ddOri.Layout.Row    = 1;
       ddOri.Layout.Column = 2;
@@ -44,10 +48,10 @@ classdef mrViewer < handle
       ax.Layout.Column   = [1 3];
 
       % Navigation buttons
-      btnL = uibutton(gl, 'Text', '←');
+      btnL = uibutton(gl, 'Text','←');
       btnL.Layout.Row    = 3;
       btnL.Layout.Column = 1;
-      btnR = uibutton(gl, 'Text', '→');
+      btnR = uibutton(gl, 'Text','→');
       btnR.Layout.Row    = 3;
       btnR.Layout.Column = 3;
 
@@ -61,13 +65,23 @@ classdef mrViewer < handle
       lblSlice.Layout.Row    = 4;
       lblSlice.Layout.Column = [1 3];
 
+      % Only show mask checkbox if mask data was provided
+      if ~isempty(obj.maskVol)
+        obj.hMaskCheckbox = uicheckbox(gl, ...
+          'Text','Show Mask', ...
+          'Value', obj.maskVisible, ...
+          'ValueChangedFcn', @(s,e) obj.onMaskToggle(s,e,ax,lblSlice,sld));
+        obj.hMaskCheckbox.Layout.Row    = 1;
+        obj.hMaskCheckbox.Layout.Column = 3;
+      end
+
       % Assign callbacks (after all handles exist)
-      ddOri.ValueChangedFcn     = @(s,e) obj.onOrientationChanged(e, ax, lblSlice, sld);
-      btnL.ButtonPushedFcn       = @(s,e) obj.leftClick(ax, lblSlice, sld);
-      btnR.ButtonPushedFcn       = @(s,e) obj.rightClick(ax, lblSlice, sld);
-      sld.ValueChangedFcn        = @(s,e) obj.onSliderChanged(e, ax, lblSlice, sld);
-      sld.ValueChangingFcn       = @(s,e) obj.onSliderChanging(e, ax, lblSlice, sld);
-      fig.WindowKeyPressFcn = @(src, evt) obj.onKeyPress(evt, ax, lblSlice, sld);
+      ddOri.ValueChangedFcn   = @(s,e) obj.onOrientationChanged(e, ax, lblSlice, sld);
+      btnL.ButtonPushedFcn    = @(s,e) obj.leftClick(ax, lblSlice, sld);
+      btnR.ButtonPushedFcn    = @(s,e) obj.rightClick(ax, lblSlice, sld);
+      sld.ValueChangedFcn     = @(s,e) obj.onSliderChanged(e, ax, lblSlice, sld);
+      sld.ValueChangingFcn    = @(s,e) obj.onSliderChanging(e, ax, lblSlice, sld);
+      fig.WindowKeyPressFcn   = @(src,evt) obj.onKeyPress(evt, ax, lblSlice, sld);
 
       % Initialize and display first slice
       obj.updateMax(sld);
@@ -83,6 +97,7 @@ classdef mrViewer < handle
           obj.rightClick(ax, lblSlice, sld);
       end
     end
+
     function updateMax(obj, sld)
       % Determine max slices for the selected orientation and update slider
       dims = size(obj.imgVol);
@@ -117,7 +132,7 @@ classdef mrViewer < handle
     function onSliderChanging(obj, event, ax, lblSlice, sld)
       % Handle slider drag (continuous update)
       idxDrag = round(event.Value);
-      if idxDrag~=obj.idx
+      if idxDrag ~= obj.idx
         obj.idx = idxDrag;
         obj.showSlice(ax, lblSlice, sld);
       end
@@ -137,6 +152,12 @@ classdef mrViewer < handle
       obj.showSlice(ax, lblSlice, sld);
     end
 
+    % Callback for toggling mask visibility
+    function onMaskToggle(obj, src, ~, ax, lblSlice, sld)
+      obj.maskVisible = src.Value;
+      obj.showSlice(ax, lblSlice, sld);
+    end
+
     function showSlice(obj, ax, lblSlice, sld)
       % Display the current slice in the chosen orientation
       switch obj.orientation
@@ -150,13 +171,17 @@ classdef mrViewer < handle
           slice = obj.imgVol(:, :, obj.idx);
           if ~isempty(obj.maskVol), msk = obj.maskVol(:, :, obj.idx); end
       end
+
       imshow(slice, [], 'Parent', ax);
       hold(ax,'on');
-      if ~isempty(obj.maskVol)
+
+      % Overlay mask only if provided and visible
+      if obj.maskVisible && ~isempty(obj.maskVol)
         maskRGB = cat(3, ones(size(msk)), zeros(size(msk)), zeros(size(msk)));
         h = imshow(maskRGB, 'Parent', ax);
-        h.AlphaData = (msk>0)*0.3;
+        h.AlphaData = (msk>0) * 0.3;
       end
+
       hold(ax,'off');
       lblSlice.Text = sprintf('Slice %d / %d', obj.idx, obj.maxIdx);
     end
