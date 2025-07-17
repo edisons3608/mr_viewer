@@ -51,7 +51,7 @@ mrViewer(img,mask)
 * **← / → Buttons:** Move one slice left or right
 * **Slider:** Jump to any slice
 * **Slice Label:** Displays current slice index and total number of slices
-
+* **Scroll:** Scroll over the figure to quickly switch between slices
 
 * **Properties:**
 
