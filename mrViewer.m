@@ -5,6 +5,7 @@ classdef mrViewer < handle
     imgVol                           % 3D image volume
     maskVol = []                     % Optional mask volume
     maxIdx (1,1) double              % maximum slices in current orientation
+    vox = []                         % Voxel dimensions [dx, dy, dz]
 
     % Toggle visibility for mask overlay (only used if maskVol is non-empty)
     maskVisible (1,1) logical = true
@@ -18,6 +19,7 @@ classdef mrViewer < handle
         error('Must provide an input volume.');
       end
       obj.imgVol = double(imageMr.dataAy);
+      obj.vox   = imageMr.vox;
       if nargin >= 2 && ~isempty(maskMr)
         obj.maskVol = double(maskMr.dataAy);
       end
@@ -76,12 +78,12 @@ classdef mrViewer < handle
       end
 
       % Assign callbacks (after all handles exist)
-      ddOri.ValueChangedFcn   = @(s,e) obj.onOrientationChanged(e, ax, lblSlice, sld);
-      btnL.ButtonPushedFcn    = @(s,e) obj.leftClick(ax, lblSlice, sld);
-      btnR.ButtonPushedFcn    = @(s,e) obj.rightClick(ax, lblSlice, sld);
-      sld.ValueChangedFcn     = @(s,e) obj.onSliderChanged(e, ax, lblSlice, sld);
-      sld.ValueChangingFcn    = @(s,e) obj.onSliderChanging(e, ax, lblSlice, sld);
-      fig.WindowKeyPressFcn   = @(src,evt) obj.onKeyPress(evt, ax, lblSlice, sld);
+      ddOri.ValueChangedFcn    = @(s,e) obj.onOrientationChanged(e, ax, lblSlice, sld);
+      btnL.ButtonPushedFcn     = @(s,e) obj.leftClick(ax, lblSlice, sld);
+      btnR.ButtonPushedFcn     = @(s,e) obj.rightClick(ax, lblSlice, sld);
+      sld.ValueChangedFcn      = @(s,e) obj.onSliderChanged(e, ax, lblSlice, sld);
+      sld.ValueChangingFcn     = @(s,e) obj.onSliderChanging(e, ax, lblSlice, sld);
+      fig.WindowKeyPressFcn    = @(src,evt) obj.onKeyPress(evt, ax, lblSlice, sld);
       fig.WindowScrollWheelFcn = @(src,event) obj.onScroll(event, ax, lblSlice, sld);
 
       % Initialize and display first slice
@@ -89,7 +91,7 @@ classdef mrViewer < handle
       obj.idx = 1;
       obj.showSlice(ax, lblSlice, sld);
     end
-    
+
     function onKeyPress(obj, event, ax, lblSlice, sld)
       switch event.Key
         case 'leftarrow'
@@ -174,15 +176,20 @@ classdef mrViewer < handle
         case 'X'
           slice = squeeze(obj.imgVol(obj.idx, :, :));
           if ~isempty(obj.maskVol), msk = squeeze(obj.maskVol(obj.idx, :, :)); end
+          dar = [obj.vox(2), obj.vox(3), 1];
         case 'Y'
           slice = squeeze(obj.imgVol(:, obj.idx, :));
           if ~isempty(obj.maskVol), msk = squeeze(obj.maskVol(:, obj.idx, :)); end
+          dar = [obj.vox(1), obj.vox(3), 1];
         otherwise
           slice = obj.imgVol(:, :, obj.idx);
           if ~isempty(obj.maskVol), msk = obj.maskVol(:, :, obj.idx); end
+          dar = [obj.vox(1), obj.vox(2), 1];
       end
 
+      % Show image with physical spacing
       imshow(slice, [], 'Parent', ax);
+      ax.DataAspectRatio = dar;
       hold(ax,'on');
 
       % Overlay mask only if provided and visible
