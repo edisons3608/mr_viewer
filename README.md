@@ -11,6 +11,7 @@ A lightweight MATLAB UI for visualizing 3D medical image volumes in mrStruct typ
   * Orientation dropdown menu
   * Left/Right buttons
   * Slider with live updating
+  * Scroll wheel to iterate quickly through slices
 
 ## Requirements
 

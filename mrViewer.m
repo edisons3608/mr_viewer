@@ -82,6 +82,7 @@ classdef mrViewer < handle
       sld.ValueChangedFcn     = @(s,e) obj.onSliderChanged(e, ax, lblSlice, sld);
       sld.ValueChangingFcn    = @(s,e) obj.onSliderChanging(e, ax, lblSlice, sld);
       fig.WindowKeyPressFcn   = @(src,evt) obj.onKeyPress(evt, ax, lblSlice, sld);
+      fig.WindowScrollWheelFcn = @(src,event) obj.onScroll(event, ax, lblSlice, sld);
 
       % Initialize and display first slice
       obj.updateMax(sld);
@@ -95,6 +96,15 @@ classdef mrViewer < handle
           obj.leftClick(ax, lblSlice, sld);
         case 'rightarrow'
           obj.rightClick(ax, lblSlice, sld);
+      end
+    end
+
+    function onScroll(obj, event, ax, lblSlice, sld)
+      % Scroll-wheel over figure: down → next, up → previous
+      if event.VerticalScrollCount > 0
+        obj.rightClick(ax, lblSlice, sld);
+      elseif event.VerticalScrollCount < 0
+        obj.leftClick(ax, lblSlice, sld);
       end
     end
 
