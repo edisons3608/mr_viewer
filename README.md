@@ -5,7 +5,7 @@ A lightweight MATLAB UI for visualizing 3D medical image volumes in mrStruct typ
 ## Features
 
 * View arbitrary 3D volumes slice by slice in X, Y, or Z orientation
-* Overlay an optional binary mask with configurable transparency and color
+* Overlay an optional binary mask with opacity choice
 * Navigate slices via:
 
   * Orientation dropdown menu
@@ -24,13 +24,13 @@ A lightweight MATLAB UI for visualizing 3D medical image volumes in mrStruct typ
 2. Add the project folder to your MATLAB path:
 
    ```matlab
-   addpath(genpath('path/to/mrViewer2'))
+   addpath(genpath('path/to/mr_viewer'))
    ```
 
 ## Usage
 
 ```matlab
-% Load your mrStruct volumes into the workspace with the appropriately oriented dataAy volumes.
+% Load your mrStruct volumes into the workspace with the appropriately oriented dataAy volumes and vox.
 
 img = load("CMRAMag.mat").mrStruct;
 
