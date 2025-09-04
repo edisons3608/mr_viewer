@@ -2,15 +2,14 @@
 
 A lightweight MATLAB UI for visualizing 3D medical image volumes in mrStruct type.
 
-## Features
+## Usage
 
 * View arbitrary 3D volumes slice by slice in X, Y, or Z orientation
 * Overlay an optional binary mask with opacity choice
 * Navigate slices via:
 
-  * Orientation dropdown menu
   * Left/Right buttons
-  * Slider with live updating
+  * Slider
   * Scroll wheel to iterate quickly through slices
 
 ## Requirements
